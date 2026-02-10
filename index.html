@@ -3,59 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Тюряга TWA</title>
+    <title>Тюряга TWA - Профиль</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            /* Берем цвета из темы Telegram */
             --tg-bg: var(--tg-theme-bg-color, #1a1a1a);
             --tg-text: var(--tg-theme-text-color, #eee);
             --tg-btn: var(--tg-theme-button-color, #3390ec);
             --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
         }
-        body { 
-            background: var(--tg-bg); 
-            color: var(--tg-text); 
-            font-family: sans-serif; 
-            margin: 0; padding: 10px;
-            display: flex; justify-content: center;
-            overflow-x: hidden;
-        }
+        body { background: var(--tg-bg); color: var(--tg-text); font-family: sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; }
         #game-container { width: 100%; max-width: 450px; }
+
+        /* Стиль профиля */
+        .user-profile {
+            display: flex; align-items: center; gap: 15px;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 12px; border-radius: 16px; margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--tg-btn); background: #333; }
+        .user-info { display: flex; flex-direction: column; }
+        #user-name { font-weight: bold; font-size: 16px; }
+        #user-status { font-size: 12px; color: var(--tg-btn); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
         .boss-section { text-align: center; position: relative; margin-bottom: 15px; }
-        .boss-img { width: 150px; height: 150px; border-radius: 50%; border: 4px solid #d32f2f; transition: transform 0.1s; }
+        .boss-img { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #d32f2f; transition: transform 0.1s; }
         
-        .stats { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .hp-bar-container { background: #333; height: 24px; border-radius: 12px; margin: 10px 0; position: relative; overflow: hidden; border: 1px solid #000; }
+        #hp-fill { background: linear-gradient(90deg, #ff5252, #b71c1c); height: 100%; width: 100%; transition: width 0.3s; }
+        #hp-text { position: absolute; width: 100%; text-align: center; top: 3px; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000; color: white; }
+
+        .stats { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; }
         
         .btn { 
-            background: var(--tg-btn); color: var(--tg-btn-text);
-            border: none; padding: 15px; width: 100%; margin-bottom: 10px;
-            border-radius: 12px; font-weight: bold; cursor: pointer;
+            background: var(--tg-btn); color: var(--tg-btn-text); border: none; padding: 15px; width: 100%; 
+            margin-bottom: 10px; border-radius: 12px; font-weight: bold; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn-attack { background: #d32f2f; color: white; }
-        
-        /* Полоска HP */
-        .hp-bar-container { background: #333; height: 24px; border-radius: 12px; margin: 10px 0; position: relative; overflow: hidden; border: 1px solid #000; }
-        #hp-fill { background: #f44336; height: 100%; width: 100%; transition: width 0.2s; }
-        #hp-text { position: absolute; width: 100%; text-align: center; top: 3px; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
 
-        .log { background: rgba(0,0,0,0.3); height: 100px; overflow-y: auto; padding: 10px; font-size: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .log { background: rgba(0,0,0,0.3); height: 80px; overflow-y: auto; padding: 10px; font-size: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* Анимации урона */
-        .damage-popup { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #ff5252; animation: floatUp 0.6s forwards; z-index: 10; pointer-events: none; }
-        @keyframes floatUp { 0% { opacity: 1; top: 40%; } 100% { opacity: 0; top: 20%; } }
-        .shake { animation: shakeAnim 0.2s; }
-        @keyframes shakeAnim { 0% { transform: translate(2px); } 50% { transform: translate(-2px); } 100% { transform: translate(0); } }
+        .damage-popup { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; font-weight: bold; color: #ff5252; animation: floatUp 0.6s forwards; z-index: 10; pointer-events: none; text-shadow: 2px 2px 0 #000; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } }
+        .shake { animation: shakeAnim 0.2s ease-in-out; }
+        @keyframes shakeAnim { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <div class="user-profile">
+        <img src="https://i.imgur.com/8pS1S0V.png" id="user-photo" class="user-avatar">
+        <div class="user-info">
+            <div id="user-name">Загрузка...</div>
+            <div id="user-status">Статус: Заключенный</div>
+        </div>
+    </div>
+
     <div class="boss-section">
         <img src="" id="boss-avatar" class="boss-img">
-        <div id="boss-name" style="margin-top: 10px; font-weight: bold;"></div>
+        <div id="boss-name" style="margin-top: 10px; font-weight: bold; font-size: 18px;"></div>
         <div class="hp-bar-container">
             <div id="hp-fill"></div>
             <div id="hp-text">0/0 HP</div>
@@ -71,52 +81,82 @@
 
     <button class="btn" onclick="game.doTask()">⚒️ Сделать дело (-10⚡)</button>
     <button class="btn btn-attack" onclick="game.attackBoss()">👊 Ударить босса</button>
-    <button class="btn" style="background: #4a148c;" onclick="game.buyTattoo()">💉 Наколка (-100 папирос)</button>
+    <button class="btn" style="background: #4a148c;" onclick="game.buyTattoo()">💉 Набить наколку (-100 папирос)</button>
 
     <div class="log" id="game-log"></div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачиваем на весь экран
+    tg.expand();
 
     class PrisonGame {
         constructor() {
             this.lvl = 1; this.auth = 0; this.cigs = 50; this.energy = 100; this.maxEnergy = 100; this.dmg = 10; this.currentBossIndex = 0;
             this.bossList = [
                 { name: "Кирпич", hp: 100, maxHp: 100, img: "https://i.imgur.com/6X2hSjI.png", minLvl: 1, reward: 200 },
-                { name: "Сизый", hp: 500, maxHp: 500, img: "https://i.imgur.com/8pS1S0V.png", minLvl: 3, reward: 1000 }
+                { name: "Сизый", hp: 500, maxHp: 500, img: "https://i.imgur.com/8pS1S0V.png", minLvl: 3, reward: 1000 },
+                { name: "Махно", hp: 2000, maxHp: 2000, img: "https://i.imgur.com/BfR8A9k.png", minLvl: 7, reward: 5000 }
             ];
             this.loadGame();
+            this.initTelegramUser();
             this.updateUI();
             setInterval(() => this.regenEnergy(), 5000);
         }
 
         get currentBoss() { return this.bossList[this.currentBossIndex]; }
 
+        initTelegramUser() {
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ` ${user.last_name}` : '');
+                if (user.photo_url) {
+                    document.getElementById('user-photo').src = user.photo_url;
+                }
+            } else {
+                document.getElementById('user-name').innerText = "Местный";
+            }
+            this.updateStatus();
+        }
+
+        updateStatus() {
+            let s = "Первоход";
+            if (this.lvl >= 3) s = "Шнырь";
+            if (this.lvl >= 5) s = "Мужик";
+            if (this.lvl >= 10) s = "Блатной";
+            if (this.lvl >= 15) s = "Авторитет";
+            document.getElementById('user-status').innerText = `Статус: ${s}`;
+        }
+
         attackBoss() {
-            const boss = this.currentBoss;
-            if (boss.hp > 0) {
-                // Вибрация Telegram!
+            const b = this.currentBoss;
+            if (b.hp > 0) {
                 tg.HapticFeedback.impactOccurred('medium');
-                
                 const isCrit = Math.random() < 0.15;
                 const d = isCrit ? this.dmg * 2 : this.dmg;
-                boss.hp -= d;
+                b.hp -= d;
                 this.showDamage(d, isCrit);
                 
                 const img = document.getElementById('boss-avatar');
                 img.classList.add('shake');
                 setTimeout(() => img.classList.remove('shake'), 200);
 
-                if (boss.hp <= 0) {
-                    this.cigs += boss.reward;
-                    this.log(`🏆 ${boss.name} повержен!`);
-                    this.currentBossIndex = (this.currentBossIndex + 1) % this.bossList.length;
-                    this.currentBoss.hp = this.currentBoss.maxHp;
+                if (b.hp <= 0) {
+                    this.cigs += b.reward;
+                    this.log(`🏆 ${b.name} повержен!`);
+                    this.checkNextBoss();
                 }
                 this.updateUI();
                 this.saveGame();
+            }
+        }
+
+        checkNextBoss() {
+            if (this.currentBossIndex < this.bossList.length - 1) {
+                this.currentBossIndex++;
+                this.currentBoss.hp = this.currentBoss.maxHp;
+            } else {
+                this.currentBoss.hp = this.currentBoss.maxHp;
             }
         }
 
@@ -140,7 +180,8 @@
         checkLevelUp() {
             if (this.auth >= this.lvl * 100) {
                 this.lvl++; this.maxEnergy += 20; this.energy = this.maxEnergy;
-                this.log(`⭐ УРОВЕНЬ ${this.lvl}!`);
+                this.updateStatus();
+                this.log(`⭐ НОВЫЙ УРОВЕНЬ: ${this.lvl}!`);
             }
         }
 
@@ -175,16 +216,16 @@
 
         saveGame() {
             const data = { lvl: this.lvl, cigs: this.cigs, dmg: this.dmg, bossIdx: this.currentBossIndex, hp: this.currentBoss.hp, auth: this.auth };
-            localStorage.setItem('tg_prison_save', JSON.stringify(data));
+            localStorage.setItem('tg_prison_save_v2', JSON.stringify(data));
         }
 
         loadGame() {
-            const s = localStorage.getItem('tg_prison_save');
+            const s = localStorage.getItem('tg_prison_save_v2');
             if (s) {
                 const d = JSON.parse(s);
-                this.lvl = d.lvl; this.cigs = d.cigs; this.dmg = d.dmg;
-                this.currentBossIndex = d.bossIdx; this.bossList[this.currentBossIndex].hp = d.hp;
-                this.auth = d.auth;
+                this.lvl = d.lvl || 1; this.cigs = d.cigs || 0; this.dmg = d.dmg || 10;
+                this.currentBossIndex = d.bossIdx || 0; this.auth = d.auth || 0;
+                if(this.bossList[this.currentBossIndex]) this.bossList[this.currentBossIndex].hp = d.hp;
             }
         }
     }
