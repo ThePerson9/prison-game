@@ -32,7 +32,7 @@
             background-size: cover; border-radius: 12px; transition: 0.3s;
             filter: grayscale(0.5);
         }
-        .char-card.selected { border-color: var(--gold); filter: grayscale(0); transform: scale(1.1); box-shadow: 0 0 30px var(--gold); }
+        .-card.selected { border-color: var(--gold); filter: grayscale(0); transform: scale(1.1); box-shadow: 0 0 30px var(--gold); }
 
         /* Верхняя панель */
         .top-bar {
@@ -117,8 +117,8 @@
 <div id="setup-screen">
     <h1 style="color:var(--gold); text-shadow: 0 0 10px var(--gold);">КТО ТЫ ПО ЖИЗНИ?</h1>
     <div style="display:flex; gap:20px;">
-        <div class="char-card" id="c1" onclick="game.pick(1)" style="background-image:url('https://i.imgur.com/39A0vW3.png')"></div>
-        <div class="char-card" id="c2" onclick="game.pick(2)" style="background-image:url('https://i.imgur.com/8pS1S0V.png')"></div>
+        <div class="-card" id="c1" onclick="game.pick(1)" style="background-image:url('https://i.imgur.com/39A0vW3.png')"></div>
+        <div class="-card" id="c2" onclick="game.pick(2)" style="background-image:url('https://i.imgur.com/8pS1S0V.png')"></div>
     </div>
     <button class="btn-hit" onclick="game.start()" style="margin-top:40px">В ХАТУ</button>
 </div>
@@ -200,7 +200,7 @@ class PrisonGame {
         this.maxEn = save.maxEn ?? 50;
         this.lvl = save.lvl ?? 1;
         this.exp = save.exp ?? 0;
-        this.myChar = save.myChar ?? '';
+        this.my = save.my ?? '';
         this.myTattoos = save.myTattoos ?? [];
         this.bIdx = save.bIdx ?? 0;
 
@@ -225,7 +225,7 @@ class PrisonGame {
             { n: "Сыграть в буру", en: 25, rew: 1200, exp: 150 }
         ];
 
-        if(this.myChar) {
+        if(this.my) {
             document.getElementById('setup-screen').style.display = 'none';
             this.setHero();
         }
@@ -244,7 +244,7 @@ class PrisonGame {
     }
 
     pick(id) {
-        this.myChar = id === 1 ? 'https://i.imgur.com/39A0vW3.png' : 'https://i.imgur.com/8pS1S0V.png';
+        this.myChar = id === 1 ? 'zk1.jpg' : 'zk1.jpg';
         document.getElementById('c1').classList.toggle('selected', id === 1);
         document.getElementById('c2').classList.toggle('selected', id === 2);
     }
@@ -395,3 +395,4 @@ const game = new PrisonGame();
 </script>
 </body>
 </html>
+
