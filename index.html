@@ -9,176 +9,117 @@
         :root {
             --gold: #f0c571;
             --dark-brown: #2d1a12;
-            --panel-gradient: linear-gradient(to bottom, #4a2b1d, #2d1a12);
             --prison-orange: #d35400;
+            --rage-color: #ff0000;
         }
 
         body {
             background: #1a0f0a url('https://www.transparenttextures.com/patterns/dark-brick-wall.png');
-            color: #fff;
-            font-family: 'Arial Narrow', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            user-select: none;
+            color: #fff; font-family: 'Arial Narrow', sans-serif;
+            margin: 0; padding: 0; overflow: hidden; user-select: none;
         }
 
-        /* Хедер в стиле оригинала */
+        /* Хедер */
         .top-nav {
-            display: flex;
-            background: var(--panel-gradient);
-            border-bottom: 2px solid #5e3a29;
-            height: 40px;
-            align-items: center;
-            font-size: 12px;
-            box-shadow: 0 2px 10px #000;
+            display: flex; background: linear-gradient(to bottom, #4a2b1d, #2d1a12);
+            border-bottom: 2px solid #5e3a29; height: 45px; align-items: center; font-size: 13px;
         }
+        .top-nav div { flex: 1; text-align: center; border-right: 1px solid #5e3a29; }
 
-        .top-nav div {
-            flex: 1;
-            text-align: center;
-            border-right: 1px solid #5e3a29;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        /* Контейнер персонажа и слоев тату */
+        /* Персонаж */
         .character-box {
-            position: relative;
-            width: 100%;
-            height: 65vh;
+            position: relative; width: 100%; height: 60vh;
             background: url('https://i.imgur.com/39A0vW3.png') no-repeat center bottom;
-            background-size: contain;
-            margin-top: 10px;
+            background-size: contain; transition: transform 0.05s;
+        }
+        .rage-mode .character-box { animation: shake 0.1s infinite; filter: sepia(1) saturate(5) hue-rotate(-50deg); }
+
+        @keyframes shake {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            50% { transform: translate(-1px, -2px) rotate(-1deg); }
+            100% { transform: translate(1px, 2px) rotate(0deg); }
         }
 
+        /* Тату */
         .tattoo-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center bottom;
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+            opacity: 0; transition: opacity 0.5s; pointer-events: none;
         }
-
         .tattoo-layer.visible { opacity: 1; }
 
-        /* Иконки слева */
-        .side-menu {
-            position: absolute;
-            left: 10px;
-            top: 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 10;
+        /* Интерфейс ярости */
+        .rage-container {
+            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+            width: 200px; text-align: center;
         }
+        .rage-bar-bg { background: #000; border: 1px solid #555; height: 8px; border-radius: 4px; overflow: hidden; }
+        #rage-fill { width: 0%; height: 100%; background: var(--rage-color); transition: width 0.2s; box-shadow: 0 0 10px var(--rage-color); }
 
-        .icon-btn {
-            width: 42px;
-            height: 42px;
-            background: #3d2419;
-            border: 2px solid #5e3a29;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: inset 0 0 8px #000;
-        }
+        /* Босс и ХП */
+        .boss-info { position: absolute; top: 55px; right: 15px; width: 140px; text-align: right; }
+        .hp-bar { background: #111; border: 1px solid #444; height: 12px; border-radius: 6px; overflow: hidden; }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(to right, #ff4444, #990000); transition: 0.2s; }
 
-        .icon-btn.active { border-color: var(--gold); background: #5e3a29; }
-
-        /* Прогресс-бары */
-        .hp-container {
-            position: absolute;
-            top: 60px;
-            right: 15px;
-            width: 120px;
-            text-align: right;
-        }
-
-        .bar-bg { background: #111; border: 1px solid #444; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 4px; }
-        .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        #hp-fill { background: linear-gradient(to right, #ff4444, #990000); }
-
-        /* Нижняя панель с кнопкой */
-        .footer-action {
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-prison {
+        /* Кнопка */
+        .footer { position: fixed; bottom: 20px; width: 100%; text-align: center; }
+        .btn-hit {
             background: linear-gradient(to bottom, #d35400, #a04000);
-            border: 1px solid #f39c12;
-            color: #fff;
-            padding: 12px 30px;
-            font-weight: bold;
-            font-size: 18px;
-            border-radius: 4px;
-            text-shadow: 1px 1px #000;
+            border: 1px solid #f39c12; color: #fff; padding: 15px 40px;
+            font-weight: bold; font-size: 20px; border-radius: 5px;
             box-shadow: 0 4px 0 #5e2700;
         }
+        .btn-hit:active { transform: translateY(2px); box-shadow: 0 2px 0 #5e2700; }
+        .rage-active-btn { background: var(--rage-color) !important; border-color: #fff !important; }
 
-        .btn-prison:active { transform: translateY(2px); box-shadow: 0 2px 0 #5e2700; }
-
-        /* Экраны */
-        .screen { display: none; padding: 20px; height: 80vh; overflow-y: auto; background: rgba(0,0,0,0.8); }
+        /* Меню */
+        .side-menu { position: absolute; left: 10px; top: 60px; display: flex; flex-direction: column; gap: 10px; }
+        .icon-btn { width: 45px; height: 45px; background: #3d2419; border: 2px solid #5e3a29; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        
+        .screen { display: none; position: fixed; top: 45px; bottom: 0; width: 100%; background: rgba(20,10,5,0.95); z-index: 100; padding: 20px; box-sizing: border-box; }
         .screen.active { display: block; }
-
-        /* Списки */
-        .list-item { background: #2d1a12; border: 1px solid #5e3a29; padding: 10px; margin-bottom: 8px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; }
+        .list-item { background: #2d1a12; border: 1px solid #5e3a29; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
-<body>
+<body id="game-body">
 
 <div class="top-nav">
     <div style="color: var(--gold)">👤 <span id="st-rank">ШНЫРЬ</span></div>
-    <div>⚡ <span id="st-energy">30</span></div>
     <div style="color: #2ecc71">🚬 <span id="st-cigs">0</span></div>
     <div style="color: var(--gold)">🦷 <span id="st-teeth">0</span></div>
 </div>
 
 <div class="side-menu">
-    <div class="icon-btn active" onclick="game.scr('main', this)">🏠</div>
-    <div class="icon-btn" onclick="game.scr('ink', this)">💉</div>
-    <div class="icon-btn" onclick="game.scr('top', this)">🏆</div>
+    <div class="icon-btn" onclick="game.scr('main')">🏠</div>
+    <div class="icon-btn" onclick="game.scr('ink')">💉</div>
 </div>
 
-<div id="scr-main" class="screen active" style="background: transparent; padding:0;">
-    <div class="hp-container">
-        <small id="b-name" style="color: var(--gold)">МАЙОР</small>
-        <div class="bar-bg"><div id="hp-fill" class="bar-fill"></div></div>
+<div id="scr-main">
+    <div class="boss-info">
+        <b id="b-name" style="color: var(--gold); text-transform: uppercase;">КИРПИЧ</b>
+        <div class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
+        <small id="hp-num">1000/1000</small>
     </div>
 
-    <div class="character-box">
-        <div id="layer-stars" class="tattoo-layer" style="background-image: url('URL_STARS_PNG');"></div>
-        <div id="layer-ring" class="tattoo-layer" style="background-image: url('URL_RING_PNG');"></div>
-        <div id="layer-domes" class="tattoo-layer" style="background-image: url('URL_DOMES_PNG');"></div>
+    <div class="character-box" id="char-box">
+        <div id="layer-stars" class="tattoo-layer" style="background-image: url('https://i.imgur.com/your_stars.png');"></div>
+        <div id="layer-domes" class="tattoo-layer" style="background-image: url('https://i.imgur.com/your_domes.png');"></div>
     </div>
 
-    <div class="footer-action">
-        <button class="btn-prison" onclick="game.hit()">ЧЁ НА?</button>
+    <div class="rage-container">
+        <small id="rage-text" style="color: #666;">ЯРОСТЬ</small>
+        <div class="rage-bar-bg"><div id="rage-fill"></div></div>
+    </div>
+
+    <div class="footer">
+        <button id="hit-btn" class="btn-hit" onclick="game.hit()">ЧЁ НА?</button>
     </div>
 </div>
 
 <div id="scr-ink" class="screen">
-    <h2 style="color: var(--gold)">КОЛЬЩИК</h2>
+    <h2 style="color: var(--gold); border-bottom: 1px solid #5e3a29;">САЛОН "У КОЛЬЩИКА"</h2>
     <div id="ink-list"></div>
-</div>
-
-<div id="scr-top" class="screen">
-    <h2 style="color: var(--gold)">АВТОРИТЕТЫ</h2>
-    <div id="top-list"></div>
+    <button class="btn-hit" style="width:100%; margin-top:20px;" onclick="game.scr('main')">НАЗАД</button>
 </div>
 
 <script>
@@ -187,50 +128,109 @@ tg.expand();
 
 class PrisonGame {
     constructor() {
-        this.cigs = 500;
+        this.cigs = 1000;
         this.teeth = 0;
         this.myTattoos = [];
-        this.boss = { name: "МАЙОР", hp: 1000, max: 1000 };
         
+        // Механика ярости
+        this.rage = 0;
+        this.isRageMode = false;
+        this.lastClick = 0;
+
+        // Список боссов по ссылке
+        this.bosses = [
+            { n: "Кирпич", hp: 1000, m: 1000, rew: 200 },
+            { n: "Сизый", hp: 10000, m: 10000, rew: 1000 },
+            { n: "Махно", hp: 50000, m: 50000, rew: 5000 },
+            { n: "Лютый", hp: 100000, m: 100000, rew: 15000 },
+            { n: "Шайба", hp: 500000, m: 500000, rew: 50000 }
+        ];
+        this.bIdx = 0;
+
         this.tattoos = [
-            { id: 'stars', n: "Звезды", cost: 1000, dmg: 20 },
-            { id: 'ring', n: "Перстень", cost: 5000, dmg: 50 },
-            { id: 'domes', n: "Купола", cost: 20000, dmg: 150 }
+            { id: 'stars', n: "Воровские звезды", cost: 1500, dmg: 50 },
+            { id: 'domes', n: "Купола на грудь", cost: 10000, dmg: 200 }
         ];
 
         this.update();
+        setInterval(() => this.decayRage(), 200);
     }
 
-    scr(id, btn) {
+    scr(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('scr-' + id).classList.add('active');
-        if(btn) btn.classList.add('active');
-
+        if(id !== 'main') document.getElementById('scr-' + id).classList.add('active');
         if(id === 'ink') this.renderInk();
-        if(id === 'top') this.renderTop();
     }
 
     hit() {
-        let dmg = 10 + (this.myTattoos.length * 20);
-        this.boss.hp -= dmg;
-        tg.HapticFeedback.impactOccurred('medium');
+        if(this.isRageMode) tg.HapticFeedback.impactOccurred('heavy');
+        else tg.HapticFeedback.impactOccurred('light');
 
-        if(this.boss.hp <= 0) {
-            this.cigs += 200;
-            this.boss.hp = this.boss.max;
-            tg.showAlert("Босс лег! Получено 200 папирос.");
+        let baseDmg = 10;
+        this.myTattoos.forEach(tid => {
+            const t = this.tattoos.find(x => x.id === tid);
+            if(t) baseDmg += t.dmg;
+        });
+
+        const multiplier = this.isRageMode ? 5 : 1;
+        const totalDmg = baseDmg * multiplier;
+
+        this.bosses[this.bIdx].hp -= totalDmg;
+        
+        // Накопление ярости
+        if(!this.isRageMode) {
+            this.rage += 5;
+            if(this.rage >= 100) this.activateRage();
         }
+
+        if(this.bosses[this.bIdx].hp <= 0) this.nextBoss();
         this.update();
+    }
+
+    activateRage() {
+        this.isRageMode = true;
+        this.rage = 100;
+        document.getElementById('game-body').classList.add('rage-mode');
+        document.getElementById('hit-btn').classList.add('rage-active-btn');
+        document.getElementById('rage-text').innerText = "ЯРОСТЬ!!!";
+        
+        setTimeout(() => {
+            this.isRageMode = false;
+            this.rage = 0;
+            document.getElementById('game-body').classList.remove('rage-mode');
+            document.getElementById('hit-btn').classList.remove('rage-active-btn');
+            document.getElementById('rage-text').innerText = "ЯРОСТЬ";
+            this.update();
+        }, 5000);
+    }
+
+    decayRage() {
+        if(!this.isRageMode && this.rage > 0) {
+            this.rage -= 1;
+            this.update();
+        }
+    }
+
+    nextBoss() {
+        const b = this.bosses[this.bIdx];
+        this.cigs += b.rew;
+        tg.showAlert(`Босс ${b.n} пал! Твои папиросы: ${this.cigs}`);
+        
+        if(this.bIdx < this.bosses.length - 1) this.bIdx++;
+        else {
+            this.bIdx = 0;
+            tg.showAlert("Все боссы повалены! Идем на второй круг.");
+        }
+        this.bosses[this.bIdx].hp = this.bosses[this.bIdx].m;
     }
 
     renderInk() {
         const list = document.getElementById('ink-list');
         list.innerHTML = this.tattoos.map(t => `
             <div class="list-item">
-                <div><b>${t.n}</b><br><small>+${t.dmg} к урону</small></div>
-                <button class="btn-prison" style="font-size:12px; padding:5px 10px" 
-                    onclick="game.buyInk('${t.id}', ${t.cost})" 
+                <div><b>${t.n}</b><br><small>+${t.dmg} урона</small></div>
+                <button class="btn-hit" style="font-size:14px; padding:10px;" 
+                    onclick="game.buyInk('${t.id}', ${t.cost})"
                     ${this.myTattoos.includes(t.id) ? 'disabled' : ''}>
                     ${this.myTattoos.includes(t.id) ? 'НАБИТО' : t.cost + ' 🚬'}
                 </button>
@@ -242,37 +242,24 @@ class PrisonGame {
         if(this.cigs >= cost) {
             this.cigs -= cost;
             this.myTattoos.push(id);
-            tg.HapticFeedback.notificationOccurred('success');
             this.renderInk();
             this.update();
-        } else {
-            tg.showAlert("Не хватает папирос!");
+            tg.showAlert("Кольщик сделал всё в лучшем виде!");
         }
     }
 
-    renderTop() {
-        const list = document.getElementById('top-list');
-        const mockData = [
-            {n: "Сиплый", t: 150}, {n: "Вы", t: this.teeth}, {n: "Шрам", t: 5}
-        ].sort((a,b) => b.t - a.t);
-        
-        list.innerHTML = mockData.map((p, i) => `
-            <div class="list-item">
-                <span>${i+1}. ${p.n}</span>
-                <span style="color: var(--gold)">${p.t} 🦷</span>
-            </div>
-        `).join('');
-    }
-
     update() {
+        const b = this.bosses[this.bIdx];
         document.getElementById('st-cigs').innerText = Math.floor(this.cigs);
-        document.getElementById('st-teeth').innerText = this.teeth;
-        document.getElementById('hp-fill').style.width = (this.boss.hp / this.boss.max * 100) + '%';
-        
-        // Обновление слоев тату на теле
-        this.tattoos.forEach(t => {
-            const layer = document.getElementById('layer-' + t.id);
-            if(this.myTattoos.includes(t.id)) layer.classList.add('visible');
+        document.getElementById('b-name').innerText = b.n;
+        document.getElementById('hp-num').innerText = `${Math.ceil(b.hp)} / ${b.m}`;
+        document.getElementById('hp-fill').style.width = (b.hp / b.m * 100) + '%';
+        document.getElementById('rage-fill').style.width = this.rage + '%';
+
+        // Визуализация тату
+        this.myTattoos.forEach(tid => {
+            const el = document.getElementById('layer-' + tid);
+            if(el) el.classList.add('visible');
         });
     }
 }
