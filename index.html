@@ -3,290 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Тюряга TWA - Full Edition</title>
+    <title>Тюряга: Telegram Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --tg-bg: var(--tg-theme-bg-color, #1a1a1a);
-            --tg-text: var(--tg-theme-text-color, #eee);
-            --tg-btn: var(--tg-theme-button-color, #3390ec);
-            --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
-            --tg-hint: var(--tg-theme-hint-color, #aaa);
+            --tg-bg: #0f0f0f;
+            --tg-text: #ffffff;
+            --tg-btn: #3390ec;
+            --danger: #ff4444;
+            --gold: #ffd700;
+            --gray: #2c2c2c;
         }
-        body { background: var(--tg-bg); color: var(--tg-text); font-family: sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; overflow-x: hidden; }
-        #game-container { width: 100%; max-width: 450px; }
+        body { background: var(--tg-bg); color: var(--tg-text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 10px; overflow-x: hidden; user-select: none; }
+        
+        /* Интерфейс */
+        .tabs { display: flex; gap: 4px; margin-bottom: 10px; sticky: top; }
+        .tab-btn { flex: 1; padding: 10px 2px; text-align: center; font-size: 9px; font-weight: bold; background: var(--gray); border-radius: 8px; cursor: pointer; border: 1px solid #333; transition: 0.2s; }
+        .tab-btn.active { background: var(--tg-btn); border-color: var(--tg-btn); transform: translateY(-2px); }
 
-        /* Вкладки */
-        .tabs { display: flex; justify-content: space-around; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 15px; padding: 5px; border: 1px solid rgba(255,255,255,0.1); }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        .tab-btn.active { background: var(--tg-btn); color: var(--tg-btn-text); }
-        .game-screen { display: none; }
-        .game-screen.active { display: block; animation: fadeIn 0.3s; }
+        .game-screen { display: none; animation: fadeIn 0.3s; }
+        .game-screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Профиль */
-        .user-profile { display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 15px; margin-bottom: 15px; }
-        .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--tg-btn); background: #333; }
-        #user-name { font-weight: bold; font-size: 15px; }
-        #user-status { font-size: 11px; color: var(--tg-btn); font-weight: bold; text-transform: uppercase; }
-
-        /* Босс */
-        .boss-section { text-align: center; position: relative; margin-bottom: 15px; }
-        .boss-img { width: 140px; height: 140px; border-radius: 50%; border: 4px solid #d32f2f; transition: transform 0.1s; box-shadow: 0 0 15px rgba(211, 47, 47, 0.3); }
-        .hp-bar-container { background: #222; height: 20px; border-radius: 10px; margin: 10px 0; position: relative; overflow: hidden; border: 1px solid #000; }
-        #hp-fill { background: linear-gradient(90deg, #ff5252, #b71c1c); height: 100%; width: 100%; transition: width 0.3s; }
-        #hp-text { position: absolute; width: 100%; text-align: center; top: 2px; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 1px #000; }
+        /* События */
+        #event-bar { background: var(--danger); text-align: center; padding: 6px; font-size: 11px; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 10px; }
 
         /* Статы */
-        .stats { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .stat-line { font-size: 13px; font-weight: bold; }
-        .stat-line span:last-child { color: var(--tg-btn); }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .stat-item { background: #1a1a1a; padding: 10px; border-radius: 12px; border: 1px solid #333; }
+        .stat-item small { color: #888; font-size: 10px; display: block; }
+        .stat-item b { font-size: 16px; color: var(--tg-btn); }
+        .teeth-count { color: var(--gold) !important; }
 
-        /* Магазин */
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .shop-item { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); position: relative; }
-        .shop-item.locked { opacity: 0.4; filter: grayscale(1); }
-        .item-icon { font-size: 30px; margin-bottom: 5px; }
-        .item-price { color: #ffeb3b; font-size: 12px; font-weight: bold; margin-top: 5px; }
+        /* Босс */
+        .boss-container { text-align: center; padding: 15px; background: radial-gradient(circle, #222 0%, #000 100%); border-radius: 20px; border: 1px solid #333; margin-bottom: 10px; }
+        .hp-bar { height: 12px; background: #333; border-radius: 6px; margin: 10px 0; overflow: hidden; border: 1px solid #444; }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, #ff4444, #880000); width: 100%; transition: 0.2s; }
 
-        /* Кнопки и Лог */
-        .btn { background: var(--tg-btn); color: var(--tg-btn-text); border: none; padding: 14px; width: 100%; margin-bottom: 8px; border-radius: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-attack { background: #d32f2f; }
-        .log { background: rgba(0,0,0,0.3); height: 70px; overflow-y: auto; padding: 8px; font-size: 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: var(--tg-hint); }
+        /* Погоняла и Ранги */
+        .rank-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-right: 5px; color: #fff; text-transform: uppercase; }
+        .rank-newbie { background: #666; } .rank-thug { background: #e67e22; } .rank-king { background: var(--gold); color: #000; }
 
-        .damage-popup { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #ff5252; animation: floatUp 0.5s forwards; pointer-events: none; text-shadow: 2px 2px 0 #000; }
-        @keyframes floatUp { to { opacity: 0; transform: translate(-50%, -100%) scale(1.5); } }
-        .shake { animation: shake 0.2s; }
-        @keyframes shake { 0%, 100% { transform: translate(0); } 25% { transform: translate(-5px); } 75% { transform: translate(5px); } }
+        /* Чат */
+        .chat-box { background: #000; height: 120px; border-radius: 10px; padding: 8px; overflow-y: auto; border: 1px solid #222; margin-top: 10px; font-size: 11px; }
+        .msg { margin-bottom: 4px; border-bottom: 1px solid #111; }
+        .msg b { color: var(--tg-btn); }
+
+        /* Тату */
+        .tattoo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .tattoo-slot { aspect-ratio: 1/1; background: #1a1a1a; border: 2px dashed #333; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; }
+        .tattoo-slot.active { border: 2px solid var(--tg-btn); background: #000; }
+
+        /* Кнопки */
+        .btn { background: var(--tg-btn); color: #fff; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.1s; -webkit-tap-highlight-color: transparent; }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-locked { background: #444; opacity: 0.5; }
+
+        .leaderboard-item { display: flex; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid #222; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="tabs">
-        <div id="btn-main" class="tab-btn active" onclick="game.showScreen('main')">👊 Бой</div>
-        <div id="btn-shop" class="tab-btn" onclick="game.showScreen('shop')">🛒 Склад</div>
-        <div id="btn-top" class="tab-btn" onclick="game.showScreen('top')">🏆 Топ</div>
+<div id="event-bar"></div>
+
+<div class="tabs">
+    <div class="tab-btn active" onclick="game.scr('main')">👊 БОЙ</div>
+    <div class="tab-btn" onclick="game.scr('ink')">💉 ТАТУ</div>
+    <div class="tab-btn" onclick="game.scr('clan')">🏢 БАНДА</div>
+    <div class="tab-btn" onclick="game.scr('market')">💀 РЫНОК</div>
+    <div class="tab-btn" onclick="game.scr('top')">🏆 ТОП</div>
+</div>
+
+<div id="s-main" class="game-screen active">
+    <div class="stat-grid">
+        <div class="stat-item"><small>Папиросы / Зубы</small><b id="st-cigs">0</b></div>
+        <div class="stat-item"><small>Твой урон</small><b id="st-dmg">10</b></div>
     </div>
-
-    <div id="screen-main" class="game-screen active">
-        <div class="user-profile">
-            <img src="" id="user-photo" class="user-avatar" style="display:none;">
-            <div class="user-info">
-                <div id="user-name">Загрузка...</div>
-                <div id="user-status">Первоход</div>
-            </div>
-        </div>
-
-        <div class="boss-section">
-            <img src="" id="boss-avatar" class="boss-img">
-            <div id="boss-name" style="margin-top: 8px; font-weight: bold;"></div>
-            <div class="hp-bar-container">
-                <div id="hp-fill"></div>
-                <div id="hp-text">0/0 HP</div>
-            </div>
-        </div>
-
-        <div class="stats">
-            <div class="stat-line">Уровень: <span id="lvl">1</span></div>
-            <div class="stat-line">Урон: <span id="dmg">10</span></div>
-            <div class="stat-line">🚬 Папиросы: <span id="cigs">0</span></div>
-            <div class="stat-line">⚡ Энергия: <span id="energy">0/0</span></div>
-        </div>
-
-        <button class="btn" onclick="game.doTask()">⚒️ Сделать дело (-10⚡)</button>
-        <button class="btn btn-attack" onclick="game.attackBoss()">👊 Ударить босса</button>
-        <button class="btn" style="background: #4a148c;" onclick="game.buyTattoo()">💉 Наколка (-100 🚬)</button>
-        <div class="log" id="game-log"></div>
+    
+    <div class="boss-container">
+        <h4 id="b-name" style="margin:0 0 10px 0">МАЙОР</h4>
+        <img src="https://i.imgur.com/8pS1S0V.png" style="width:100px; filter: drop-shadow(0 0 10px rgba(255,0,0,0.5));">
+        <div class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
+        <div id="hp-text" style="font-size:12px">100/100</div>
     </div>
+    
+    <button class="btn" onclick="game.hit()">УДАРИТЬ</button>
+    <button id="hide-btn" class="btn btn-gold" style="display:none; margin-top:5px" onclick="game.hideCigs()">📦 СПРЯТАТЬ ПАПИРОСЫ</button>
+</div>
 
-    <div id="screen-shop" class="game-screen">
-        <h3 style="margin: 0 0 15px 0; font-size: 16px;">Оружейный склад</h3>
-        <div id="shop-grid" class="shop-grid"></div>
-    </div>
-
-    <div id="screen-top" class="game-screen">
-        <h3 style="margin: 0 0 15px 0; font-size: 16px;">Авторитеты зоны</h3>
-        <div id="leaderboard">
-            <div style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; font-size: 13px;">
-                Пока здесь только легенды. Стань первым в списке!
-            </div>
-        </div>
+<div id="s-ink" class="game-screen">
+    <h3 style="text-align:center">Кольщик</h3>
+    <div class="tattoo-grid" id="tattoo-grid"></div>
+    <div id="ink-info" style="display:none; margin-top:15px; background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333;">
+        <h4 id="ink-name" style="margin:0"></h4>
+        <p id="ink-desc" style="font-size:12px; color:#aaa"></p>
+        <button class="btn" id="ink-buy-btn">НАБИТЬ</button>
     </div>
 </div>
 
+<div id="s-clan" class="game-screen">
+    <div style="background:var(--gray); padding:15px; border-radius:12px; text-align:center; border:1px solid var(--gold)">
+        <h3 style="margin:0; color:var(--gold)">Черные Дельфины</h3>
+        <small>Общак: <span id="st-obshek">0</span> 🚬</small>
+        <button class="btn btn-gold" style="margin-top:10px; padding:8px" onclick="game.donate()">ВКИНУТЬ 100 🚬</button>
+    </div>
+    
+    <div class="chat-box" id="chat-messages"></div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px">
+        <button class="tab-btn" onclick="game.sendMsg('Вечер в хату!')">👋 Салам</button>
+        <button class="tab-btn" onclick="game.sendMsg('Жми на босса!')">👊 Жми!</button>
+    </div>
+</div>
+
+<div id="s-market" class="game-screen">
+    <h3 style="text-align:center; color:var(--gold)">Черный рынок</h3>
+    <div id="market-list"></div>
+    
+    <hr style="border:0; border-top:1px solid #333; margin:20px 0">
+    
+    <div style="background:linear-gradient(45deg, #111, #222); padding:15px; border-radius:12px; border:1px solid #f1c40f; text-align:center">
+        <h4 style="margin:0">План Побега</h4>
+        <p style="font-size:11px">За каждые 100к папирос ты получишь 1 зуб, но начнешь заново.</p>
+        <button class="btn btn-gold" onclick="game.escape()">УЙТИ В БЕГА (<span id="p-teeth">0</span> 🦷)</button>
+    </div>
+</div>
+
+<div id="s-top" class="game-screen">
+    <h3 style="text-align:center">Авторитеты</h3>
+    <div id="leader-list"></div>
+</div>
+
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-    class PrisonGame {
-        constructor() {
-            this.lvl = 1; this.auth = 0; this.cigs = 50; this.energy = 100; this.maxEnergy = 100; this.dmg = 10;
-            this.currentBossIndex = 0; this.ownedWeapons = [];
-            
-            this.bossList = [
-                { name: "Кирпич", hp: 100, maxHp: 100, img: "https://i.imgur.com/6X2hSjI.png", reward: 200 },
-                { name: "Сизый", hp: 600, maxHp: 600, img: "https://i.imgur.com/8pS1S0V.png", reward: 1200 },
-                { name: "Махно", hp: 3000, maxHp: 3000, img: "https://i.imgur.com/BfR8A9k.png", reward: 5000 }
-            ];
+class PrisonGame {
+    constructor() {
+        // Базовые ресурсы
+        this.cigs = 500;
+        this.teeth = 0;
+        this.dmg = 10;
+        this.obshek = 1000;
+        this.myDonated = 0;
+        this.myTattoos = [];
+        this.myPets = { 'rat': 0 };
+        this.userName = tg.initDataUnsafe?.user?.first_name || "Арестант";
+        
+        // Босс
+        this.boss = { hp: 500, m: 500 };
+        
+        // Справочники
+        this.ranks = [
+            { n: "Шнырь", req: 0, b: 0, c: "rank-newbie" },
+            { n: "Мужик", req: 1000, b: 10, c: "rank-newbie" },
+            { n: "Бывалый", req: 10000, b: 50, c: "rank-thug" },
+            { n: "Вор в законе", req: 50000, b: 200, c: "rank-king" }
+        ];
+        
+        this.tattoos = [
+            { id: 'ring', n: "Перстень", b: "+5% урона", cost: 1000, icon: "💍" },
+            { id: 'stars', n: "Звезды", b: "+20 урона", cost: 5000, icon: "⭐" },
+            { id: 'domes', n: "Купола", b: "+50% урона", cost: 25000, icon: "⛪" }
+        ];
 
-            this.weapons = [
-                { id: 0, name: "Заточка", dmg: 10, price: 300, lvl: 1, img: "🔪" },
-                { id: 1, name: "Кастет", dmg: 30, price: 1500, lvl: 3, img: "🥊" },
-                { id: 2, name: "Арматура", dmg: 80, price: 5000, lvl: 6, img: "🦯" },
-                { id: 3, name: "Обрез", dmg: 250, price: 15000, lvl: 10, img: "🔫" }
-            ];
+        this.petData = {
+            'rat': { n: "Крыса", cost: 1, dmg: 2, icon: "🐀" },
+            'crow': { n: "Ворон", cost: 5, dmg: 10, icon: "🐦" }
+        };
 
-            this.loadGame();
-            this.initTelegram();
-            this.updateUI();
-            setInterval(() => this.regenEnergy(), 5000);
-        }
+        this.currentEvent = null;
+        this.eventTimer = 0;
 
-        initTelegram() {
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                document.getElementById('user-name').innerText = user.first_name;
-                if (user.photo_url) {
-                    const img = document.getElementById('user-photo');
-                    img.src = user.photo_url; img.style.display = 'block';
-                }
-            } else { document.getElementById('user-name').innerText = "Заключенный"; }
-            this.updateStatus();
-        }
+        this.load();
+        this.update();
+        setInterval(() => this.tick(), 1000);
+    }
 
-        showScreen(id) {
-            document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('screen-' + id).classList.add('active');
-            document.getElementById('btn-' + id).classList.add('active');
-            tg.HapticFeedback.impactOccurred('light');
-            if(id === 'shop') this.renderShop();
-        }
+    // Системные функции
+    save() {
+        const data = { cigs: this.cigs, teeth: this.teeth, tattoos: this.myTattoos, obshek: this.obshek, donated: this.myDonated, pets: this.myPets };
+        localStorage.setItem('prison_data_final', JSON.stringify(data));
+    }
 
-        attackBoss() {
-            const b = this.bossList[this.currentBossIndex];
-            if (b.hp > 0) {
-                tg.HapticFeedback.impactOccurred('medium');
-                const isCrit = Math.random() < 0.15;
-                const d = isCrit ? this.dmg * 2 : this.dmg;
-                b.hp -= d;
-                this.showDamage(d, isCrit);
-                document.getElementById('boss-avatar').classList.add('shake');
-                setTimeout(() => document.getElementById('boss-avatar').classList.remove('shake'), 200);
-
-                if (b.hp <= 0) {
-                    this.cigs += b.reward;
-                    this.log(`🏆 Победа над ${b.name}! +${b.reward} 🚬`);
-                    this.currentBossIndex = (this.currentBossIndex + 1) % this.bossList.length;
-                    this.bossList[this.currentBossIndex].hp = this.bossList[this.currentBossIndex].maxHp;
-                }
-                this.updateUI(); this.saveGame();
-            }
-        }
-
-        doTask() {
-            if (this.energy >= 10) {
-                this.energy -= 10; this.cigs += 25; this.auth += 40;
-                tg.HapticFeedback.notificationOccurred('success');
-                this.checkLevelUp(); this.updateUI(); this.saveGame();
-            }
-        }
-
-        checkLevelUp() {
-            if (this.auth >= this.lvl * 120) {
-                this.lvl++; this.maxEnergy += 20; this.energy = this.maxEnergy;
-                this.log(`⭐ УРОВЕНЬ ПОВЫШЕН: ${this.lvl}!`);
-                this.updateStatus();
-            }
-        }
-
-        updateStatus() {
-            const statuses = ["Первоход", "Шнырь", "Мужик", "Блатной", "Авторитет", "Вор в законе"];
-            const idx = Math.min(Math.floor(this.lvl / 3), statuses.length - 1);
-            document.getElementById('user-status').innerText = statuses[idx];
-        }
-
-        renderShop() {
-            const grid = document.getElementById('shop-grid');
-            grid.innerHTML = '';
-            this.weapons.forEach(w => {
-                const locked = this.lvl < w.lvl;
-                const bought = this.ownedWeapons.includes(w.id);
-                const item = document.createElement('div');
-                item.className = `shop-item ${locked ? 'locked' : ''}`;
-                item.innerHTML = `
-                    <div class="item-icon">${w.img}</div>
-                    <div style="font-weight:bold;font-size:13px;">${w.name}</div>
-                    <div style="font-size:10px;color:#4caf50;">+${w.dmg} урона</div>
-                    <div class="item-price">${bought ? 'КУПЛЕНО' : w.price + ' 🚬'}</div>
-                `;
-                if (!locked && !bought) item.onclick = () => this.buyWeapon(w);
-                grid.appendChild(item);
-            });
-        }
-
-        buyWeapon(w) {
-            if (this.cigs >= w.price) {
-                this.cigs -= w.price; this.dmg += w.dmg; this.ownedWeapons.push(w.id);
-                tg.HapticFeedback.notificationOccurred('success');
-                this.log(`🗡️ Куплено: ${w.name}`);
-                this.renderShop(); this.updateUI(); this.saveGame();
-            }
-        }
-
-        buyTattoo() {
-            if (this.cigs >= 100) {
-                this.cigs -= 100; this.dmg += 3;
-                tg.HapticFeedback.impactOccurred('heavy');
-                this.updateUI(); this.saveGame();
-            }
-        }
-
-        updateUI() {
-            document.getElementById('lvl').innerText = this.lvl;
-            document.getElementById('cigs').innerText = this.cigs;
-            document.getElementById('dmg').innerText = this.dmg;
-            document.getElementById('energy').innerText = `${Math.floor(this.energy)}/${this.maxEnergy}`;
-            const b = this.bossList[this.currentBossIndex];
-            document.getElementById('boss-avatar').src = b.img;
-            document.getElementById('boss-name').innerText = b.name;
-            document.getElementById('hp-text').innerText = `${Math.max(0, b.hp)}/${b.maxHp} HP`;
-            document.getElementById('hp-fill').style.width = `${(b.hp / b.maxHp) * 100}%`;
-        }
-
-        showDamage(a, c) {
-            const p = document.createElement('div'); p.className = 'damage-popup';
-            if(c) p.style.color = '#ffeb3b';
-            p.innerText = (c ? '🔥' : '') + '-' + a;
-            document.querySelector('.boss-section').appendChild(p);
-            setTimeout(() => p.remove(), 500);
-        }
-
-        log(m) {
-            const l = document.getElementById('game-log');
-            l.innerHTML += `<div>> ${m}</div>`;
-            l.scrollTop = l.scrollHeight;
-        }
-
-        regenEnergy() { if (this.energy < this.maxEnergy) { this.energy += 0.5; this.updateUI(); } }
-
-        saveGame() {
-            const d = { lvl: this.lvl, cigs: this.cigs, dmg: this.dmg, bIdx: this.currentBossIndex, bhp: this.bossList[this.currentBossIndex].hp, auth: this.auth, w: this.ownedWeapons };
-            localStorage.setItem('prison_save_v3', JSON.stringify(d));
-        }
-
-        loadGame() {
-            const s = localStorage.getItem('prison_save_v3');
-            if (s) {
-                const d = JSON.parse(s);
-                this.lvl = d.lvl; this.cigs = d.cigs; this.dmg = d.dmg;
-                this.currentBossIndex = d.bIdx; this.auth = d.auth; this.ownedWeapons = d.w || [];
-                if(this.bossList[this.currentBossIndex]) this.bossList[this.currentBossIndex].hp = d.bhp;
-            }
+    load() {
+        const s = JSON.parse(localStorage.getItem('prison_data_final'));
+        if(s) {
+            this.cigs = s.cigs; this.teeth = s.teeth; this.myTattoos = s.tattoos;
+            this.obshek = s.obshek; this.myDonated = s.donated; this.myPets = s.pets || this.myPets;
         }
     }
-    const game = new PrisonGame();
+
+    scr(id) {
+        document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('s-'+id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        if(id === 'ink') this.renderInk();
+        if(id === 'market') this.renderMarket();
+        if(id === 'top') this.renderTop();
+    }
+
+    // Геймплей
+    get totalDmg() {
+        let b = this.dmg;
+        const rank = this.getCurrentRank();
+        b += rank.b;
+        
+        if(this.myTattoos.includes('stars')) b += 20;
+        if(this.myTattoos.includes('ring')) b *= 1.05;
+        if(this.myTattoos.includes('domes')) b *= 1.5;
+        if(this.currentEvent?.id === 'riot') b *= 3;
+        
+        return Math.floor(b);
+    }
+
+    getCurrentRank() {
+        let r = this.ranks[0];
+        for(let rank of this.ranks) if(this.myDonated >= rank.req) r = rank;
+        return r;
+    }
+
+    hit() {
+        this.boss.hp -= this.totalDmg;
+        tg.HapticFeedback.impactOccurred('light');
+        if(this.boss.hp <= 0) {
+            this.cigs += 150 * (1 + (this.teeth * 0.1));
+            this.boss.hp = this.boss.m;
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+        this.save(); this.update();
+    }
+
+    tick() {
+        // Авто-урон питомцев
+        let pDmg = 0;
+        for(let id in this.myPets) pDmg += this.myPets[id] * this.petData[id].dmg;
+        if(pDmg > 0) {
+            this.boss.hp -= pDmg;
+            if(this.boss.hp <= 0) this.hit();
+            this.update();
+        }
+
+        // События
+        if(this.eventTimer > 0) {
+            this.eventTimer--;
+            if(this.eventTimer <= 0) this.currentEvent = null;
+            this.update();
+        } else if(Math.random() < 0.01) {
+            this.startEvent();
+        }
+    }
+
+    startEvent() {
+        const evs = [
+            {id:'riot', n:'🔥 БУНТ: Урон x3', c:'#c0392b'},
+            {id:'search', n:'🔍 ШМОН: Прячь папиросы!', c:'#d35400'}
+        ];
+        this.currentEvent = evs[Math.floor(Math.random()*evs.length)];
+        this.eventTimer = 60;
+        this.sendMsg("Началось событие: " + this.currentEvent.n, "СИСТЕМА");
+    }
+
+    hideCigs() {
+        if(this.currentEvent?.id === 'search') {
+            this.currentEvent = null;
+            tg.showAlert("Успел припрятать!");
+            this.update();
+        }
+    }
+
+    donate() {
+        if(this.cigs >= 100) {
+            this.cigs -= 100; this.obshek += 100; this.myDonated += 100;
+            this.sendMsg("Закинул в общак! 🚬");
+            this.save(); this.update();
+        }
+    }
+
+    escape() {
+        const reward = Math.floor(this.cigs / 100000);
+        if(reward < 1) return tg.showAlert("Нужно 100к папирос!");
+        this.teeth += reward; this.cigs = 500; this.myTattoos = []; this.myDonated = 0;
+        this.save(); this.update(); this.scr('main');
+    }
+
+    // Интерфейс
+    update() {
+        document.getElementById('st-cigs').innerHTML = `${Math.floor(this.cigs)} 🚬 | <span class="teeth-count">${this.teeth} 🦷</span>`;
+        document.getElementById('st-dmg').innerText = this.totalDmg;
+        document.getElementById('st-obshek').innerText = this.obshek;
+        document.getElementById('p-teeth').innerText = Math.floor(this.cigs / 100000);
+        
+        document.getElementById('hp-fill').style.width = (this.boss.hp/this.boss.m*100)+'%';
+        document.getElementById('hp-text').innerText = `${this.boss.hp}/${this.boss.m} HP`;
+
+        const eb = document.getElementById('event-bar');
+        if(this.currentEvent) {
+            eb.style.display = 'block'; eb.style.background = this.currentEvent.c;
+            eb.innerText = `${this.currentEvent.n} (${this.eventTimer}с)`;
+            if(this.currentEvent.id === 'search') document.getElementById('hide-btn').style.display = 'block';
+        } else {
+            eb.style.display = 'none';
+            document.getElementById('hide-btn').style.display = 'none';
+        }
+    }
+
+    renderInk() {
+        const g = document.getElementById('tattoo-grid'); g.innerHTML = '';
+        this.tattoos.forEach(t => {
+            const owned = this.myTattoos.includes(t.id);
+            g.innerHTML += `<div class="tattoo-slot ${owned?'active':''}" onclick="game.selInk('${t.id}')">${t.icon}</div>`;
+        });
+    }
+
+    selInk(id) {
+        const t = this.tattoos.find(x => x.id === id);
+        const owned = this.myTattoos.includes(id);
+        const info = document.getElementById('ink-info');
+        info.style.display = 'block';
+        document.getElementById('ink-name').innerText = t.n;
+        document.getElementById('ink-desc').innerText = `${t.b}. Цена: ${t.cost} 🚬`;
+        const btn = document.getElementById('ink-buy-btn');
+        btn.disabled = owned || this.cigs < t.cost;
+        btn.innerText = owned ? "НАБИТО" : "КУПИТЬ";
+        btn.onclick = () => {
+            this.cigs -= t.cost; this.myTattoos.push(id);
+            this.save(); this.update(); this.renderInk(); this.selInk(id);
+        }
+    }
+
+    renderMarket() {
+        const l = document.getElementById('market-list'); l.innerHTML = '';
+        for(let id in this.petData) {
+            const p = this.petData[id]; const lvl = this.myPets[id] || 0;
+            l.innerHTML += `
+                <div class="leaderboard-item">
+                    <span style="font-size:24px">${p.icon}</span>
+                    <div style="flex:1; margin-left:10px"><b>${p.n}</b> (Ур. ${lvl})<br><small>Урон: ${p.dmg*lvl}/с</small></div>
+                    <button class="btn btn-gold" style="width:auto; padding:5px 10px" onclick="game.buyPet('${id}')" ${this.teeth < p.cost ? 'disabled':''}>${p.cost} 🦷</button>
+                </div>`;
+        }
+    }
+
+    buyPet(id) {
+        if(this.teeth >= this.petData[id].cost) {
+            this.teeth -= this.petData[id].cost; this.myPets[id]++;
+            this.save(); this.update(); this.renderMarket();
+        }
+    }
+
+    renderTop() {
+        const l = document.getElementById('leader-list');
+        const players = [
+            {n: "Сизый", t: 50, r: "Вор в законе"},
+            {n: this.userName + " (ВЫ)", t: this.teeth, r: this.getCurrentRank().n, me: true},
+            {n: "Хмурый", t: 15, r: "Авторитет"}
+        ].sort((a,b) => b.t - a.t);
+        
+        l.innerHTML = players.map((p, i) => `
+            <div class="leaderboard-item ${p.me?'me-highlight':''}">
+                <b style="width:20px">${i+1}</b>
+                <div style="flex:1"><b>${p.n}</b><br><small>${p.r}</small></div>
+                <b class="teeth-count">${p.t} 🦷</b>
+            </div>
+        `).join('');
+    }
+
+    sendMsg(txt, sender = null) {
+        const b = document.getElementById('chat-messages');
+        const r = this.getCurrentRank();
+        const name = sender || this.userName;
+        b.innerHTML += `<div class="msg"><span class="rank-badge ${sender?'rank-king':r.c}">${sender?'БОСС':r.n}</span> <b>${name}:</b> ${txt}</div>`;
+        b.scrollTop = b.scrollHeight;
+        if(!sender) setTimeout(() => this.sendMsg("Базару ноль!", "Лёха"), 2000);
+    }
+}
+
+const game = new PrisonGame();
 </script>
 </body>
 </html>
