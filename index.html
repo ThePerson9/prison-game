@@ -3,135 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Тюряга: Telegram Edition</title>
+    <title>Тюряга: Возрождение</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --tg-bg: #0f0f0f;
-            --tg-text: #ffffff;
-            --tg-btn: #3390ec;
-            --danger: #ff4444;
-            --gold: #ffd700;
-            --gray: #2c2c2c;
+            --gold: #f0c571;
+            --dark-brown: #2d1a12;
+            --panel-gradient: linear-gradient(to bottom, #4a2b1d, #2d1a12);
+            --prison-orange: #d35400;
         }
-        body { background: var(--tg-bg); color: var(--tg-text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 10px; overflow-x: hidden; user-select: none; }
-        
-        /* Интерфейс */
-        .tabs { display: flex; gap: 4px; margin-bottom: 10px; sticky: top; }
-        .tab-btn { flex: 1; padding: 10px 2px; text-align: center; font-size: 9px; font-weight: bold; background: var(--gray); border-radius: 8px; cursor: pointer; border: 1px solid #333; transition: 0.2s; }
-        .tab-btn.active { background: var(--tg-btn); border-color: var(--tg-btn); transform: translateY(-2px); }
 
-        .game-screen { display: none; animation: fadeIn 0.3s; }
-        .game-screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body {
+            background: #1a0f0a url('https://www.transparenttextures.com/patterns/dark-brick-wall.png');
+            color: #fff;
+            font-family: 'Arial Narrow', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+        }
 
-        /* События */
-        #event-bar { background: var(--danger); text-align: center; padding: 6px; font-size: 11px; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 10px; }
+        /* Хедер в стиле оригинала */
+        .top-nav {
+            display: flex;
+            background: var(--panel-gradient);
+            border-bottom: 2px solid #5e3a29;
+            height: 40px;
+            align-items: center;
+            font-size: 12px;
+            box-shadow: 0 2px 10px #000;
+        }
 
-        /* Статы */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .stat-item { background: #1a1a1a; padding: 10px; border-radius: 12px; border: 1px solid #333; }
-        .stat-item small { color: #888; font-size: 10px; display: block; }
-        .stat-item b { font-size: 16px; color: var(--tg-btn); }
-        .teeth-count { color: var(--gold) !important; }
+        .top-nav div {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid #5e3a29;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
 
-        /* Босс */
-        .boss-container { text-align: center; padding: 15px; background: radial-gradient(circle, #222 0%, #000 100%); border-radius: 20px; border: 1px solid #333; margin-bottom: 10px; }
-        .hp-bar { height: 12px; background: #333; border-radius: 6px; margin: 10px 0; overflow: hidden; border: 1px solid #444; }
-        .hp-fill { height: 100%; background: linear-gradient(90deg, #ff4444, #880000); width: 100%; transition: 0.2s; }
+        /* Контейнер персонажа и слоев тату */
+        .character-box {
+            position: relative;
+            width: 100%;
+            height: 65vh;
+            background: url('https://i.imgur.com/39A0vW3.png') no-repeat center bottom;
+            background-size: contain;
+            margin-top: 10px;
+        }
 
-        /* Погоняла и Ранги */
-        .rank-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-right: 5px; color: #fff; text-transform: uppercase; }
-        .rank-newbie { background: #666; } .rank-thug { background: #e67e22; } .rank-king { background: var(--gold); color: #000; }
+        .tattoo-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
 
-        /* Чат */
-        .chat-box { background: #000; height: 120px; border-radius: 10px; padding: 8px; overflow-y: auto; border: 1px solid #222; margin-top: 10px; font-size: 11px; }
-        .msg { margin-bottom: 4px; border-bottom: 1px solid #111; }
-        .msg b { color: var(--tg-btn); }
+        .tattoo-layer.visible { opacity: 1; }
 
-        /* Тату */
-        .tattoo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .tattoo-slot { aspect-ratio: 1/1; background: #1a1a1a; border: 2px dashed #333; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; }
-        .tattoo-slot.active { border: 2px solid var(--tg-btn); background: #000; }
+        /* Иконки слева */
+        .side-menu {
+            position: absolute;
+            left: 10px;
+            top: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10;
+        }
 
-        /* Кнопки */
-        .btn { background: var(--tg-btn); color: #fff; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.1s; -webkit-tap-highlight-color: transparent; }
-        .btn:active { transform: scale(0.97); opacity: 0.9; }
-        .btn-gold { background: var(--gold); color: #000; }
-        .btn-locked { background: #444; opacity: 0.5; }
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            background: #3d2419;
+            border: 2px solid #5e3a29;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: inset 0 0 8px #000;
+        }
 
-        .leaderboard-item { display: flex; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid #222; }
+        .icon-btn.active { border-color: var(--gold); background: #5e3a29; }
+
+        /* Прогресс-бары */
+        .hp-container {
+            position: absolute;
+            top: 60px;
+            right: 15px;
+            width: 120px;
+            text-align: right;
+        }
+
+        .bar-bg { background: #111; border: 1px solid #444; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 4px; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
+        #hp-fill { background: linear-gradient(to right, #ff4444, #990000); }
+
+        /* Нижняя панель с кнопкой */
+        .footer-action {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-prison {
+            background: linear-gradient(to bottom, #d35400, #a04000);
+            border: 1px solid #f39c12;
+            color: #fff;
+            padding: 12px 30px;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 4px;
+            text-shadow: 1px 1px #000;
+            box-shadow: 0 4px 0 #5e2700;
+        }
+
+        .btn-prison:active { transform: translateY(2px); box-shadow: 0 2px 0 #5e2700; }
+
+        /* Экраны */
+        .screen { display: none; padding: 20px; height: 80vh; overflow-y: auto; background: rgba(0,0,0,0.8); }
+        .screen.active { display: block; }
+
+        /* Списки */
+        .list-item { background: #2d1a12; border: 1px solid #5e3a29; padding: 10px; margin-bottom: 8px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-<div id="event-bar"></div>
-
-<div class="tabs">
-    <div class="tab-btn active" onclick="game.scr('main')">👊 БОЙ</div>
-    <div class="tab-btn" onclick="game.scr('ink')">💉 ТАТУ</div>
-    <div class="tab-btn" onclick="game.scr('clan')">🏢 БАНДА</div>
-    <div class="tab-btn" onclick="game.scr('market')">💀 РЫНОК</div>
-    <div class="tab-btn" onclick="game.scr('top')">🏆 ТОП</div>
+<div class="top-nav">
+    <div style="color: var(--gold)">👤 <span id="st-rank">ШНЫРЬ</span></div>
+    <div>⚡ <span id="st-energy">30</span></div>
+    <div style="color: #2ecc71">🚬 <span id="st-cigs">0</span></div>
+    <div style="color: var(--gold)">🦷 <span id="st-teeth">0</span></div>
 </div>
 
-<div id="s-main" class="game-screen active">
-    <div class="stat-grid">
-        <div class="stat-item"><small>Папиросы / Зубы</small><b id="st-cigs">0</b></div>
-        <div class="stat-item"><small>Твой урон</small><b id="st-dmg">10</b></div>
-    </div>
-    
-    <div class="boss-container">
-        <h4 id="b-name" style="margin:0 0 10px 0">МАЙОР</h4>
-        <img src="https://i.imgur.com/8pS1S0V.png" style="width:100px; filter: drop-shadow(0 0 10px rgba(255,0,0,0.5));">
-        <div class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
-        <div id="hp-text" style="font-size:12px">100/100</div>
-    </div>
-    
-    <button class="btn" onclick="game.hit()">УДАРИТЬ</button>
-    <button id="hide-btn" class="btn btn-gold" style="display:none; margin-top:5px" onclick="game.hideCigs()">📦 СПРЯТАТЬ ПАПИРОСЫ</button>
+<div class="side-menu">
+    <div class="icon-btn active" onclick="game.scr('main', this)">🏠</div>
+    <div class="icon-btn" onclick="game.scr('ink', this)">💉</div>
+    <div class="icon-btn" onclick="game.scr('top', this)">🏆</div>
 </div>
 
-<div id="s-ink" class="game-screen">
-    <h3 style="text-align:center">Кольщик</h3>
-    <div class="tattoo-grid" id="tattoo-grid"></div>
-    <div id="ink-info" style="display:none; margin-top:15px; background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333;">
-        <h4 id="ink-name" style="margin:0"></h4>
-        <p id="ink-desc" style="font-size:12px; color:#aaa"></p>
-        <button class="btn" id="ink-buy-btn">НАБИТЬ</button>
+<div id="scr-main" class="screen active" style="background: transparent; padding:0;">
+    <div class="hp-container">
+        <small id="b-name" style="color: var(--gold)">МАЙОР</small>
+        <div class="bar-bg"><div id="hp-fill" class="bar-fill"></div></div>
+    </div>
+
+    <div class="character-box">
+        <div id="layer-stars" class="tattoo-layer" style="background-image: url('URL_STARS_PNG');"></div>
+        <div id="layer-ring" class="tattoo-layer" style="background-image: url('URL_RING_PNG');"></div>
+        <div id="layer-domes" class="tattoo-layer" style="background-image: url('URL_DOMES_PNG');"></div>
+    </div>
+
+    <div class="footer-action">
+        <button class="btn-prison" onclick="game.hit()">ЧЁ НА?</button>
     </div>
 </div>
 
-<div id="s-clan" class="game-screen">
-    <div style="background:var(--gray); padding:15px; border-radius:12px; text-align:center; border:1px solid var(--gold)">
-        <h3 style="margin:0; color:var(--gold)">Черные Дельфины</h3>
-        <small>Общак: <span id="st-obshek">0</span> 🚬</small>
-        <button class="btn btn-gold" style="margin-top:10px; padding:8px" onclick="game.donate()">ВКИНУТЬ 100 🚬</button>
-    </div>
-    
-    <div class="chat-box" id="chat-messages"></div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px">
-        <button class="tab-btn" onclick="game.sendMsg('Вечер в хату!')">👋 Салам</button>
-        <button class="tab-btn" onclick="game.sendMsg('Жми на босса!')">👊 Жми!</button>
-    </div>
+<div id="scr-ink" class="screen">
+    <h2 style="color: var(--gold)">КОЛЬЩИК</h2>
+    <div id="ink-list"></div>
 </div>
 
-<div id="s-market" class="game-screen">
-    <h3 style="text-align:center; color:var(--gold)">Черный рынок</h3>
-    <div id="market-list"></div>
-    
-    <hr style="border:0; border-top:1px solid #333; margin:20px 0">
-    
-    <div style="background:linear-gradient(45deg, #111, #222); padding:15px; border-radius:12px; border:1px solid #f1c40f; text-align:center">
-        <h4 style="margin:0">План Побега</h4>
-        <p style="font-size:11px">За каждые 100к папирос ты получишь 1 зуб, но начнешь заново.</p>
-        <button class="btn btn-gold" onclick="game.escape()">УЙТИ В БЕГА (<span id="p-teeth">0</span> 🦷)</button>
-    </div>
-</div>
-
-<div id="s-top" class="game-screen">
-    <h3 style="text-align:center">Авторитеты</h3>
-    <div id="leader-list"></div>
+<div id="scr-top" class="screen">
+    <h2 style="color: var(--gold)">АВТОРИТЕТЫ</h2>
+    <div id="top-list"></div>
 </div>
 
 <script>
@@ -140,244 +187,93 @@ tg.expand();
 
 class PrisonGame {
     constructor() {
-        // Базовые ресурсы
         this.cigs = 500;
         this.teeth = 0;
-        this.dmg = 10;
-        this.obshek = 1000;
-        this.myDonated = 0;
         this.myTattoos = [];
-        this.myPets = { 'rat': 0 };
-        this.userName = tg.initDataUnsafe?.user?.first_name || "Арестант";
-        
-        // Босс
-        this.boss = { hp: 500, m: 500 };
-        
-        // Справочники
-        this.ranks = [
-            { n: "Шнырь", req: 0, b: 0, c: "rank-newbie" },
-            { n: "Мужик", req: 1000, b: 10, c: "rank-newbie" },
-            { n: "Бывалый", req: 10000, b: 50, c: "rank-thug" },
-            { n: "Вор в законе", req: 50000, b: 200, c: "rank-king" }
-        ];
+        this.boss = { name: "МАЙОР", hp: 1000, max: 1000 };
         
         this.tattoos = [
-            { id: 'ring', n: "Перстень", b: "+5% урона", cost: 1000, icon: "💍" },
-            { id: 'stars', n: "Звезды", b: "+20 урона", cost: 5000, icon: "⭐" },
-            { id: 'domes', n: "Купола", b: "+50% урона", cost: 25000, icon: "⛪" }
+            { id: 'stars', n: "Звезды", cost: 1000, dmg: 20 },
+            { id: 'ring', n: "Перстень", cost: 5000, dmg: 50 },
+            { id: 'domes', n: "Купола", cost: 20000, dmg: 150 }
         ];
 
-        this.petData = {
-            'rat': { n: "Крыса", cost: 1, dmg: 2, icon: "🐀" },
-            'crow': { n: "Ворон", cost: 5, dmg: 10, icon: "🐦" }
-        };
-
-        this.currentEvent = null;
-        this.eventTimer = 0;
-
-        this.load();
         this.update();
-        setInterval(() => this.tick(), 1000);
     }
 
-    // Системные функции
-    save() {
-        const data = { cigs: this.cigs, teeth: this.teeth, tattoos: this.myTattoos, obshek: this.obshek, donated: this.myDonated, pets: this.myPets };
-        localStorage.setItem('prison_data_final', JSON.stringify(data));
-    }
+    scr(id, btn) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('scr-' + id).classList.add('active');
+        if(btn) btn.classList.add('active');
 
-    load() {
-        const s = JSON.parse(localStorage.getItem('prison_data_final'));
-        if(s) {
-            this.cigs = s.cigs; this.teeth = s.teeth; this.myTattoos = s.tattoos;
-            this.obshek = s.obshek; this.myDonated = s.donated; this.myPets = s.pets || this.myPets;
-        }
-    }
-
-    scr(id) {
-        document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('s-'+id).classList.add('active');
-        event.currentTarget.classList.add('active');
-        
         if(id === 'ink') this.renderInk();
-        if(id === 'market') this.renderMarket();
         if(id === 'top') this.renderTop();
     }
 
-    // Геймплей
-    get totalDmg() {
-        let b = this.dmg;
-        const rank = this.getCurrentRank();
-        b += rank.b;
-        
-        if(this.myTattoos.includes('stars')) b += 20;
-        if(this.myTattoos.includes('ring')) b *= 1.05;
-        if(this.myTattoos.includes('domes')) b *= 1.5;
-        if(this.currentEvent?.id === 'riot') b *= 3;
-        
-        return Math.floor(b);
-    }
-
-    getCurrentRank() {
-        let r = this.ranks[0];
-        for(let rank of this.ranks) if(this.myDonated >= rank.req) r = rank;
-        return r;
-    }
-
     hit() {
-        this.boss.hp -= this.totalDmg;
-        tg.HapticFeedback.impactOccurred('light');
+        let dmg = 10 + (this.myTattoos.length * 20);
+        this.boss.hp -= dmg;
+        tg.HapticFeedback.impactOccurred('medium');
+
         if(this.boss.hp <= 0) {
-            this.cigs += 150 * (1 + (this.teeth * 0.1));
-            this.boss.hp = this.boss.m;
-            tg.HapticFeedback.notificationOccurred('success');
+            this.cigs += 200;
+            this.boss.hp = this.boss.max;
+            tg.showAlert("Босс лег! Получено 200 папирос.");
         }
-        this.save(); this.update();
-    }
-
-    tick() {
-        // Авто-урон питомцев
-        let pDmg = 0;
-        for(let id in this.myPets) pDmg += this.myPets[id] * this.petData[id].dmg;
-        if(pDmg > 0) {
-            this.boss.hp -= pDmg;
-            if(this.boss.hp <= 0) this.hit();
-            this.update();
-        }
-
-        // События
-        if(this.eventTimer > 0) {
-            this.eventTimer--;
-            if(this.eventTimer <= 0) this.currentEvent = null;
-            this.update();
-        } else if(Math.random() < 0.01) {
-            this.startEvent();
-        }
-    }
-
-    startEvent() {
-        const evs = [
-            {id:'riot', n:'🔥 БУНТ: Урон x3', c:'#c0392b'},
-            {id:'search', n:'🔍 ШМОН: Прячь папиросы!', c:'#d35400'}
-        ];
-        this.currentEvent = evs[Math.floor(Math.random()*evs.length)];
-        this.eventTimer = 60;
-        this.sendMsg("Началось событие: " + this.currentEvent.n, "СИСТЕМА");
-    }
-
-    hideCigs() {
-        if(this.currentEvent?.id === 'search') {
-            this.currentEvent = null;
-            tg.showAlert("Успел припрятать!");
-            this.update();
-        }
-    }
-
-    donate() {
-        if(this.cigs >= 100) {
-            this.cigs -= 100; this.obshek += 100; this.myDonated += 100;
-            this.sendMsg("Закинул в общак! 🚬");
-            this.save(); this.update();
-        }
-    }
-
-    escape() {
-        const reward = Math.floor(this.cigs / 100000);
-        if(reward < 1) return tg.showAlert("Нужно 100к папирос!");
-        this.teeth += reward; this.cigs = 500; this.myTattoos = []; this.myDonated = 0;
-        this.save(); this.update(); this.scr('main');
-    }
-
-    // Интерфейс
-    update() {
-        document.getElementById('st-cigs').innerHTML = `${Math.floor(this.cigs)} 🚬 | <span class="teeth-count">${this.teeth} 🦷</span>`;
-        document.getElementById('st-dmg').innerText = this.totalDmg;
-        document.getElementById('st-obshek').innerText = this.obshek;
-        document.getElementById('p-teeth').innerText = Math.floor(this.cigs / 100000);
-        
-        document.getElementById('hp-fill').style.width = (this.boss.hp/this.boss.m*100)+'%';
-        document.getElementById('hp-text').innerText = `${this.boss.hp}/${this.boss.m} HP`;
-
-        const eb = document.getElementById('event-bar');
-        if(this.currentEvent) {
-            eb.style.display = 'block'; eb.style.background = this.currentEvent.c;
-            eb.innerText = `${this.currentEvent.n} (${this.eventTimer}с)`;
-            if(this.currentEvent.id === 'search') document.getElementById('hide-btn').style.display = 'block';
-        } else {
-            eb.style.display = 'none';
-            document.getElementById('hide-btn').style.display = 'none';
-        }
+        this.update();
     }
 
     renderInk() {
-        const g = document.getElementById('tattoo-grid'); g.innerHTML = '';
-        this.tattoos.forEach(t => {
-            const owned = this.myTattoos.includes(t.id);
-            g.innerHTML += `<div class="tattoo-slot ${owned?'active':''}" onclick="game.selInk('${t.id}')">${t.icon}</div>`;
-        });
-    }
-
-    selInk(id) {
-        const t = this.tattoos.find(x => x.id === id);
-        const owned = this.myTattoos.includes(id);
-        const info = document.getElementById('ink-info');
-        info.style.display = 'block';
-        document.getElementById('ink-name').innerText = t.n;
-        document.getElementById('ink-desc').innerText = `${t.b}. Цена: ${t.cost} 🚬`;
-        const btn = document.getElementById('ink-buy-btn');
-        btn.disabled = owned || this.cigs < t.cost;
-        btn.innerText = owned ? "НАБИТО" : "КУПИТЬ";
-        btn.onclick = () => {
-            this.cigs -= t.cost; this.myTattoos.push(id);
-            this.save(); this.update(); this.renderInk(); this.selInk(id);
-        }
-    }
-
-    renderMarket() {
-        const l = document.getElementById('market-list'); l.innerHTML = '';
-        for(let id in this.petData) {
-            const p = this.petData[id]; const lvl = this.myPets[id] || 0;
-            l.innerHTML += `
-                <div class="leaderboard-item">
-                    <span style="font-size:24px">${p.icon}</span>
-                    <div style="flex:1; margin-left:10px"><b>${p.n}</b> (Ур. ${lvl})<br><small>Урон: ${p.dmg*lvl}/с</small></div>
-                    <button class="btn btn-gold" style="width:auto; padding:5px 10px" onclick="game.buyPet('${id}')" ${this.teeth < p.cost ? 'disabled':''}>${p.cost} 🦷</button>
-                </div>`;
-        }
-    }
-
-    buyPet(id) {
-        if(this.teeth >= this.petData[id].cost) {
-            this.teeth -= this.petData[id].cost; this.myPets[id]++;
-            this.save(); this.update(); this.renderMarket();
-        }
-    }
-
-    renderTop() {
-        const l = document.getElementById('leader-list');
-        const players = [
-            {n: "Сизый", t: 50, r: "Вор в законе"},
-            {n: this.userName + " (ВЫ)", t: this.teeth, r: this.getCurrentRank().n, me: true},
-            {n: "Хмурый", t: 15, r: "Авторитет"}
-        ].sort((a,b) => b.t - a.t);
-        
-        l.innerHTML = players.map((p, i) => `
-            <div class="leaderboard-item ${p.me?'me-highlight':''}">
-                <b style="width:20px">${i+1}</b>
-                <div style="flex:1"><b>${p.n}</b><br><small>${p.r}</small></div>
-                <b class="teeth-count">${p.t} 🦷</b>
+        const list = document.getElementById('ink-list');
+        list.innerHTML = this.tattoos.map(t => `
+            <div class="list-item">
+                <div><b>${t.n}</b><br><small>+${t.dmg} к урону</small></div>
+                <button class="btn-prison" style="font-size:12px; padding:5px 10px" 
+                    onclick="game.buyInk('${t.id}', ${t.cost})" 
+                    ${this.myTattoos.includes(t.id) ? 'disabled' : ''}>
+                    ${this.myTattoos.includes(t.id) ? 'НАБИТО' : t.cost + ' 🚬'}
+                </button>
             </div>
         `).join('');
     }
 
-    sendMsg(txt, sender = null) {
-        const b = document.getElementById('chat-messages');
-        const r = this.getCurrentRank();
-        const name = sender || this.userName;
-        b.innerHTML += `<div class="msg"><span class="rank-badge ${sender?'rank-king':r.c}">${sender?'БОСС':r.n}</span> <b>${name}:</b> ${txt}</div>`;
-        b.scrollTop = b.scrollHeight;
-        if(!sender) setTimeout(() => this.sendMsg("Базару ноль!", "Лёха"), 2000);
+    buyInk(id, cost) {
+        if(this.cigs >= cost) {
+            this.cigs -= cost;
+            this.myTattoos.push(id);
+            tg.HapticFeedback.notificationOccurred('success');
+            this.renderInk();
+            this.update();
+        } else {
+            tg.showAlert("Не хватает папирос!");
+        }
+    }
+
+    renderTop() {
+        const list = document.getElementById('top-list');
+        const mockData = [
+            {n: "Сиплый", t: 150}, {n: "Вы", t: this.teeth}, {n: "Шрам", t: 5}
+        ].sort((a,b) => b.t - a.t);
+        
+        list.innerHTML = mockData.map((p, i) => `
+            <div class="list-item">
+                <span>${i+1}. ${p.n}</span>
+                <span style="color: var(--gold)">${p.t} 🦷</span>
+            </div>
+        `).join('');
+    }
+
+    update() {
+        document.getElementById('st-cigs').innerText = Math.floor(this.cigs);
+        document.getElementById('st-teeth').innerText = this.teeth;
+        document.getElementById('hp-fill').style.width = (this.boss.hp / this.boss.max * 100) + '%';
+        
+        // Обновление слоев тату на теле
+        this.tattoos.forEach(t => {
+            const layer = document.getElementById('layer-' + t.id);
+            if(this.myTattoos.includes(t.id)) layer.classList.add('visible');
+        });
     }
 }
 
